@@ -1,12 +1,41 @@
 {% extends "base.html" %}
 {% block title %}{{ object.numero }}{% endblock %}
 {% block content %}
+{% if request.GET.listo %}
+<div class="mb-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 print:hidden">
+  <p class="text-lg font-semibold text-emerald-800">✅ Reporte {{ object.numero }} guardado</p>
+  <p class="mb-4 text-sm text-emerald-700">¿Qué desea hacer ahora?</p>
+  <div class="grid gap-3 sm:grid-cols-3">
+    <button type="button" onclick="window.print()" class="rounded-xl bg-slate-800 px-4 py-3 font-medium text-white hover:bg-slate-900">🖨 Imprimir</button>
+    <button type="button" data-compartir class="rounded-xl bg-sky-700 px-4 py-3 font-medium text-white hover:bg-sky-800">📤 Compartir</button>
+    <a href="{% url 'reportes:nuevo' %}" class="rounded-xl border border-slate-300 bg-white px-4 py-3 text-center font-medium hover:bg-slate-50">＋ Nuevo reporte</a>
+  </div>
+</div>
+{% endif %}
+
 <div class="mb-4 flex flex-wrap items-center justify-between gap-3 print:hidden">
   <a href="{% url 'reportes:lista' %}" class="text-sm text-sky-700 hover:underline">← Volver a la lista</a>
-  <div class="flex gap-2">
-    <button onclick="window.print()" class="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-900">🖨 Imprimir</button>
+  <div class="flex flex-wrap gap-2">
+    <button type="button" onclick="window.print()" class="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-900">🖨 Imprimir</button>
+    <button type="button" data-compartir class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">📤 Compartir</button>
     <a href="{% url 'reportes:editar' object.pk %}" class="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800">Editar</a>
     <a href="{% url 'reportes:eliminar' object.pk %}" class="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50">Eliminar</a>
+  </div>
+</div>
+
+<div id="compartir-modal" class="fixed inset-0 z-50 hidden items-end justify-center bg-black/50 p-4 sm:items-center print:hidden">
+  <div class="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+    <div class="mb-3 flex items-center justify-between">
+      <h2 class="text-lg font-semibold">Compartir reporte</h2>
+      <button type="button" id="compartir-cerrar" class="rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-100">✕</button>
+    </div>
+    <div class="space-y-2">
+      <a id="c-whatsapp" target="_blank" rel="noopener" class="block rounded-xl border border-slate-200 px-4 py-3 hover:bg-slate-50">💬 WhatsApp</a>
+      <a id="c-correo" class="block rounded-xl border border-slate-200 px-4 py-3 hover:bg-slate-50">✉️ Correo electrónico</a>
+      <button type="button" id="c-copiar" class="block w-full rounded-xl border border-slate-200 px-4 py-3 text-left hover:bg-slate-50">🔗 Copiar enlace</button>
+    </div>
+    <p id="c-aviso" class="mt-3 hidden text-sm text-emerald-600">¡Enlace copiado!</p>
+    <p class="mt-3 text-xs text-slate-500">Quien reciba el enlace necesita una cuenta del sistema para verlo. Para enviar el reporte a alguien sin cuenta, use Imprimir → Guardar como PDF.</p>
   </div>
 </div>
 
@@ -91,4 +120,37 @@
     {% endfor %}
   </div>
 </article>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  const titulo = "Reporte {{ object.numero|escapejs }}";
+  const texto = "Reporte de atención técnica {{ object.numero|escapejs }} — {{ object.oficina|escapejs }} ({{ object.fecha|date:'d/m/Y' }})";
+  const url = location.origin + location.pathname;
+  const modal = document.getElementById('compartir-modal');
+  const abrir = () => { modal.classList.remove('hidden'); modal.classList.add('flex'); };
+  const cerrar = () => { modal.classList.add('hidden'); modal.classList.remove('flex'); };
+
+  document.getElementById('c-whatsapp').href = 'https://wa.me/?text=' + encodeURIComponent(texto + '\n' + url);
+  document.getElementById('c-correo').href = 'mailto:?subject=' + encodeURIComponent(titulo) + '&body=' + encodeURIComponent(texto + '\n\n' + url);
+  document.getElementById('compartir-cerrar').addEventListener('click', cerrar);
+  modal.addEventListener('click', e => { if (e.target === modal) cerrar(); });
+
+  document.getElementById('c-copiar').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(url); } catch (e) {
+      const t = document.createElement('textarea'); t.value = url; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove();
+    }
+    document.getElementById('c-aviso').classList.remove('hidden');
+  });
+
+  document.querySelectorAll('[data-compartir]').forEach(b => b.addEventListener('click', async () => {
+    if (navigator.share) {
+      try { await navigator.share({ title: titulo, text: texto, url }); return; }
+      catch (e) { if (e.name === 'AbortError') return; }
+    }
+    abrir();
+  }));
+})();
+</script>
 {% endblock %}

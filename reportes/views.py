@@ -69,7 +69,7 @@ class ReporteFormMixin(LoginRequiredMixin):
             else:  # si marcó "No", no se guardan filas de compra
                 self.object.compras.all().delete()
         messages.success(self.request, f"Reporte {self.object.numero} guardado correctamente.")
-        return HttpResponseRedirect(self.object.get_absolute_url())
+        return HttpResponseRedirect(self.object.get_absolute_url() + "?listo=1")
 
 
 class ReporteCreateView(ReporteFormMixin, CreateView):
