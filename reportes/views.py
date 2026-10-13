@@ -88,8 +88,9 @@ class ReporteDetailView(LoginRequiredMixin, DetailView):
         ctx = super().get_context_data(**kwargs)
         r = self.object
         ctx["firmas"] = [
-            ("7. Firma — Técnico que apoyó", r.firma_tecnico, r.firma_tecnico_img),
-            ("8. Firma — Encargado de oficina", r.firma_encargado, r.firma_encargado_img),
+            ("7. TÉCNICO", r.firma_tecnico, r.firma_tecnico_img),
+            ("8. ENCARGADO DE OFICINA", r.firma_encargado, r.firma_encargado_img),
+            ("9. JEFE INMEDIATO", "", ""),
         ]
         return ctx
 

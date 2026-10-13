@@ -1,6 +1,46 @@
 {% extends "base.html" %}
 {% block title %}{{ object.numero }}{% endblock %}
+
 {% block content %}
+<style>
+  /* Reglas exclusivas para ajustar todo el reporte en 1 SOLA PÁGINA de impresión */
+  @media print {
+    @page {
+      size: letter portrait;
+      margin: 4mm 6mm;
+    }
+    html, body {
+      background: #ffffff !important;
+      font-size: 10px !important;
+      line-height: 1.1 !important;
+      color: #000000 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .print\:hidden {
+      display: none !important;
+    }
+    .reporte-pagina {
+      padding: 0 !important;
+      margin: 0 !important;
+      border: none !important;
+      box-shadow: none !important;
+      width: 100% !important;
+    }
+    .print-border {
+      border: 1px solid #1e293b !important;
+    }
+    .print-bg-header {
+      background-color: #0284c7 !important;
+      color: #ffffff !important;
+    }
+    .print-bg-sub {
+      background-color: #e0f2fe !important;
+      color: #0369a1 !important;
+    }
+  }
+</style>
+
 {% if request.GET.listo %}
 <div class="mb-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 print:hidden">
   <p class="text-lg font-semibold text-emerald-800">✅ Reporte {{ object.numero }} guardado</p>
@@ -14,7 +54,7 @@
 {% endif %}
 
 <div class="mb-4 flex flex-wrap items-center justify-between gap-3 print:hidden">
-  <a href="{% url 'reportes:lista' %}" class="text-sm text-sky-700 hover:underline">← Volver a la lista</a>
+  <a href="{% url 'reportes:lista' %}" class="text-sm font-medium text-sky-700 hover:underline">← Volver a la lista</a>
   <div class="flex flex-wrap gap-2">
     <button type="button" onclick="window.print()" class="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-900">🖨 Imprimir</button>
     <button type="button" data-compartir class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">📤 Compartir</button>
@@ -23,6 +63,7 @@
   </div>
 </div>
 
+{# MODAL PARA COMPARTIR #}
 <div id="compartir-modal" class="fixed inset-0 z-50 hidden items-end justify-center bg-black/50 p-4 sm:items-center print:hidden">
   <div class="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
     <div class="mb-3 flex items-center justify-between">
@@ -39,86 +80,146 @@
   </div>
 </div>
 
-<article class="rounded-2xl bg-white p-5 shadow-sm sm:p-8 print:rounded-none print:p-0 print:shadow-none">
-  <header class="mb-6 text-center">
-    <h1 class="text-xl font-bold uppercase tracking-wide sm:text-2xl">Formato de reporte de atención técnica</h1>
-    <p class="text-slate-500">Municipalidad de Chiquimula, Guatemala</p>
+{# HOJA DE IMPRESIÓN OFICIAL (TAMAÑO DE HOJA AJUSTADO) #}
+<article class="reporte-pagina mx-auto max-w-4xl rounded-2xl bg-white p-4 shadow-sm border border-slate-200 print:max-w-none print:border-0 print:p-0">
+  
+  {# ENCABEZADO MEMBRETE OFICIAL #}
+  <header class="mb-2 border-b-2 border-sky-800 pb-1.5 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <div class="grid h-10 w-10 place-items-center rounded-lg bg-sky-800 text-lg text-white font-bold print:border print:border-slate-800">
+        🏛️
+      </div>
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wider text-sky-900 leading-tight">Municipalidad de Chiquimula</p>
+        <p class="text-[10px] font-semibold text-slate-600">Administración 2024-2028</p>
+      </div>
+    </div>
+    <div class="text-right">
+      <h1 class="text-base font-extrabold uppercase tracking-tight text-sky-950 print:text-sm">REPORTE DE ATENCIÓN TÉCNICA</h1>
+      <p class="text-xs font-bold text-sky-800">No. {{ object.numero }}</p>
+    </div>
   </header>
 
-  <div class="overflow-hidden rounded-lg border border-slate-300 text-sm">
-    <div class="bg-sky-100 px-3 py-1.5 font-semibold">1. Datos generales y persona afectada</div>
-    <dl class="grid sm:grid-cols-2">
-      <div class="flex border-t border-slate-200"><dt class="w-40 shrink-0 bg-slate-50 px-3 py-2 font-semibold">Reporte No.</dt><dd class="px-3 py-2">{{ object.numero }}</dd></div>
-      <div class="flex border-t border-slate-200"><dt class="w-40 shrink-0 bg-slate-50 px-3 py-2 font-semibold">Fecha</dt><dd class="px-3 py-2">{{ object.fecha|date:"d/m/Y" }}</dd></div>
-      <div class="flex border-t border-slate-200"><dt class="w-40 shrink-0 bg-slate-50 px-3 py-2 font-semibold">Oficina</dt><dd class="px-3 py-2">{{ object.oficina }}</dd></div>
-      <div class="flex border-t border-slate-200"><dt class="w-40 shrink-0 bg-slate-50 px-3 py-2 font-semibold">Llegada / salida</dt><dd class="px-3 py-2">{{ object.hora_llegada|time:"H:i"|default:"—" }} / {{ object.hora_salida|time:"H:i"|default:"—" }}</dd></div>
-      <div class="flex border-t border-slate-200"><dt class="w-40 shrink-0 bg-slate-50 px-3 py-2 font-semibold">Persona afectada</dt><dd class="px-3 py-2">{{ object.persona_afectada }}</dd></div>
-      <div class="flex border-t border-slate-200"><dt class="w-40 shrink-0 bg-slate-50 px-3 py-2 font-semibold">Cargo o puesto</dt><dd class="px-3 py-2">{{ object.cargo|default:"—" }}</dd></div>
-      <div class="flex border-t border-slate-200"><dt class="w-40 shrink-0 bg-slate-50 px-3 py-2 font-semibold">Técnico</dt><dd class="px-3 py-2">{{ object.tecnico }}</dd></div>
-      <div class="flex border-t border-slate-200"><dt class="w-40 shrink-0 bg-slate-50 px-3 py-2 font-semibold">Teléfono / ext.</dt><dd class="px-3 py-2">{{ object.telefono|default:"—" }}</dd></div>
-    </dl>
+  {# 1. DATOS GENERALES Y PERSONA AFECTADA #}
+  <div class="mb-2 overflow-hidden rounded border border-slate-400 text-xs">
+    <div class="bg-sky-800 px-2 py-0.5 font-bold text-white uppercase text-[11px] print-bg-header">1. DATOS GENERALES Y PERSONA AFECTADA</div>
+    <div class="grid grid-cols-2 divide-x divide-y divide-slate-300">
+      <div class="flex px-2 py-1"><span class="w-32 shrink-0 font-bold text-slate-700">Reporte No.:</span><span class="font-semibold">{{ object.numero }}</span></div>
+      <div class="flex px-2 py-1"><span class="w-32 shrink-0 font-bold text-slate-700">Fecha:</span><span>{{ object.fecha|date:"d/m/Y" }}</span></div>
+      <div class="flex px-2 py-1"><span class="w-32 shrink-0 font-bold text-slate-700">Oficina o dependencia:</span><span>{{ object.oficina }}</span></div>
+      <div class="flex px-2 py-1"><span class="w-32 shrink-0 font-bold text-slate-700">Hora llegada / salida:</span><span>{{ object.hora_llegada|time:"H:i"|default:"—" }} / {{ object.hora_salida|time:"H:i"|default:"—" }}</span></div>
+      <div class="flex px-2 py-1"><span class="w-32 shrink-0 font-bold text-slate-700">Persona afectada:</span><span>{{ object.persona_afectada }}</span></div>
+      <div class="flex px-2 py-1"><span class="w-32 shrink-0 font-bold text-slate-700">Cargo o puesto:</span><span>{{ object.cargo|default:"—" }}</span></div>
+      <div class="flex px-2 py-1"><span class="w-32 shrink-0 font-bold text-slate-700">Técnico responsable:</span><span>{{ object.tecnico }}</span></div>
+      <div class="flex px-2 py-1"><span class="w-32 shrink-0 font-bold text-slate-700">Teléfono / extensión:</span><span>{{ object.telefono|default:"—" }}</span></div>
+    </div>
   </div>
 
-  <div class="mt-4 grid gap-4 lg:grid-cols-3">
-    <section class="rounded-lg border border-slate-300 text-sm">
-      <div class="bg-sky-100 px-3 py-1.5 font-semibold">2. Problema reportado</div>
-      <div class="space-y-2 p-3">
-        <p class="font-semibold">Tipo de problema</p>
-        <div class="flex flex-wrap gap-1.5">{% for t in object.tipos_display %}<span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs">{{ t }}</span>{% empty %}<span class="text-slate-400">—</span>{% endfor %}</div>
-        <p class="font-semibold">Descripción</p>
-        <p class="whitespace-pre-line">{{ object.descripcion }}</p>
+  {# 2 y 3. PROBLEMA Y RESOLUCIÓN #}
+  <div class="mb-2 grid gap-2 grid-cols-2 text-xs">
+    <section class="rounded border border-slate-400">
+      <div class="bg-sky-100 px-2 py-0.5 font-bold text-sky-900 border-b border-slate-400 text-[11px] print-bg-sub">2. PROBLEMA REPORTADO</div>
+      <div class="p-1.5 space-y-1">
+        <p class="font-semibold text-slate-800">Tipo de problema:</p>
+        <div class="grid grid-cols-2 gap-x-1 gap-y-0.5 text-[10.5px]">
+          <div>{% if "equipo" in object.tipos_problema %}☑{% else %}☐{% endif %} Equipo de cómputo</div>
+          <div>{% if "red" in object.tipos_problema %}☑{% else %}☐{% endif %} Red o internet</div>
+          <div>{% if "impresora" in object.tipos_problema %}☑{% else %}☐{% endif %} Impresora o escáner</div>
+          <div>{% if "software" in object.tipos_problema %}☑{% else %}☐{% endif %} Sistema o software</div>
+          <div>{% if "electrica" in object.tipos_problema %}☑{% else %}☐{% endif %} Instalación eléctrica</div>
+          <div>{% if "otro" in object.tipos_problema %}☑{% else %}☐{% endif %} Otro: {{ object.otro_tipo|default:"______" }}</div>
+        </div>
+        <p class="font-semibold text-slate-800 pt-1 border-t border-slate-200">Descripción del problema:</p>
+        <p class="whitespace-pre-line text-slate-700 leading-tight">{{ object.descripcion }}</p>
       </div>
     </section>
-    <section class="rounded-lg border border-slate-300 text-sm">
-      <div class="bg-sky-100 px-3 py-1.5 font-semibold">3. Resolución aplicada</div>
-      <p class="whitespace-pre-line p-3">{{ object.resolucion|default:"—" }}</p>
-    </section>
-    <section class="rounded-lg border border-slate-300 text-sm">
-      <div class="bg-sky-100 px-3 py-1.5 font-semibold">4. Recomendaciones</div>
-      <p class="whitespace-pre-line p-3">{{ object.recomendaciones|default:"—" }}</p>
+
+    <section class="rounded border border-slate-400">
+      <div class="bg-sky-100 px-2 py-0.5 font-bold text-sky-900 border-b border-slate-400 text-[11px] print-bg-sub">3. RESOLUCIÓN APLICADA</div>
+      <div class="p-1.5">
+        <p class="font-semibold text-slate-800 mb-0.5">Qué se hizo para solucionarlo:</p>
+        <p class="whitespace-pre-line text-slate-700 leading-tight">{{ object.resolucion|default:"—" }}</p>
+      </div>
     </section>
   </div>
 
-  <div class="mt-4 grid gap-4 lg:grid-cols-5">
-    <section class="rounded-lg border border-slate-300 text-sm lg:col-span-2">
-      <div class="bg-sky-100 px-3 py-1.5 font-semibold">5. Confirmación de la solución</div>
-      <div class="space-y-2 p-3">
-        <p><strong>¿Se resolvió?</strong> {{ object.get_resultado_display }}</p>
-        <p><strong>Motivo o seguimiento:</strong><br><span class="whitespace-pre-line">{{ object.motivo_seguimiento|default:"—" }}</span></p>
+  {# 4. RECOMENDACIONES #}
+  <section class="mb-2 rounded border border-slate-400 text-xs">
+    <div class="bg-sky-100 px-2 py-0.5 font-bold text-sky-900 border-b border-slate-400 text-[11px] print-bg-sub">4. RECOMENDACIONES</div>
+    <div class="p-1.5">
+      <p class="font-semibold text-slate-800 mb-0.5">Para evitar que el problema se repita:</p>
+      <p class="whitespace-pre-line text-slate-700 leading-tight">{{ object.recomendaciones|default:"—" }}</p>
+    </div>
+  </section>
+
+  {# 5 y 6. CONFIRMACIÓN Y COMPRAS #}
+  <div class="mb-2 grid gap-2 grid-cols-2 text-xs">
+    <section class="rounded border border-slate-400">
+      <div class="bg-sky-100 px-2 py-0.5 font-bold text-sky-900 border-b border-slate-400 text-[11px] print-bg-sub">5. CONFIRMACIÓN DE LA SOLUCIÓN</div>
+      <div class="p-1.5 space-y-1">
+        <p class="font-semibold text-slate-800">¿Se resolvió el problema?</p>
+        <div class="space-y-0.5 text-[10.5px]">
+          <div>{% if object.resultado == "si" %}☑{% else %}☐{% endif %} Sí, quedó resuelto</div>
+          <div>{% if object.resultado == "parcial" %}☑{% else %}☐{% endif %} Parcialmente, queda pendiente</div>
+          <div>{% if object.resultado == "no" %}☑{% else %}☐{% endif %} No se pudo resolver</div>
+        </div>
+        <p class="font-semibold text-slate-800 pt-1 border-t border-slate-200">Motivo o seguimiento:</p>
+        <p class="whitespace-pre-line text-slate-700 leading-tight">{{ object.motivo_seguimiento|default:"—" }}</p>
       </div>
     </section>
-    <section class="rounded-lg border border-slate-300 text-sm lg:col-span-3">
-      <div class="bg-sky-100 px-3 py-1.5 font-semibold">6. Compra de materiales o repuestos</div>
-      <div class="p-3">
+
+    <section class="rounded border border-slate-400">
+      <div class="bg-sky-100 px-2 py-0.5 font-bold text-sky-900 border-b border-slate-400 text-[11px] print-bg-sub">6. COMPRA DE MATERIALES O REPUESTOS</div>
+      <div class="p-1.5">
+        <p class="mb-1 text-[10.5px]">
+          <strong>¿Fue necesario comprar algo?</strong>
+          {% if object.hubo_compra %}☐ No  ☑ Sí{% else %}☑ No  ☐ Sí{% endif %}
+        </p>
         {% if object.hubo_compra %}
-        <p class="mb-2"><strong>Factura / comprobante:</strong> {{ object.no_factura|default:"—" }}</p>
-        <div class="overflow-x-auto">
-        <table class="w-full border border-slate-300 text-left">
-          <thead class="bg-slate-50"><tr><th class="px-2 py-1">Artículo</th><th class="px-2 py-1">Cant.</th><th class="px-2 py-1">Precio unit. (Q)</th><th class="px-2 py-1 text-right">Total (Q)</th></tr></thead>
+        <p class="mb-1 text-[10.5px]"><strong>No. de factura:</strong> {{ object.no_factura|default:"______" }}</p>
+        <table class="w-full border border-slate-300 text-left text-[10px]">
+          <thead class="bg-slate-100">
+            <tr><th class="px-1 py-0.5">Artículo</th><th class="px-1 py-0.5">Cant.</th><th class="px-1 py-0.5">Precio (Q)</th><th class="px-1 py-0.5 text-right">Total (Q)</th></tr>
+          </thead>
           <tbody>
             {% for i in object.compras.all %}
-            <tr class="border-t border-slate-200"><td class="px-2 py-1">{{ i.articulo }}</td><td class="px-2 py-1">{{ i.cantidad }}</td><td class="px-2 py-1">{{ i.precio_unitario|floatformat:2 }}</td><td class="px-2 py-1 text-right">{{ i.total|floatformat:2 }}</td></tr>
+            <tr class="border-t border-slate-200"><td class="px-1 py-0.5">{{ i.articulo }}</td><td class="px-1 py-0.5">{{ i.cantidad }}</td><td class="px-1 py-0.5">{{ i.precio_unitario|floatformat:2 }}</td><td class="px-1 py-0.5 text-right">{{ i.total|floatformat:2 }}</td></tr>
             {% endfor %}
-            <tr class="border-t border-slate-300 bg-slate-50 font-semibold"><td colspan="3" class="px-2 py-1 text-right">Total de la compra</td><td class="px-2 py-1 text-right">Q {{ object.total_compra|floatformat:2 }}</td></tr>
+            <tr class="border-t border-slate-400 bg-slate-50 font-bold"><td colspan="3" class="px-1 py-0.5 text-right">Total:</td><td class="px-1 py-0.5 text-right">Q {{ object.total_compra|floatformat:2 }}</td></tr>
           </tbody>
         </table>
-        </div>
-        {% else %}<p>No fue necesario comprar nada.</p>{% endif %}
+        {% else %}
+        <p class="text-slate-500 italic py-2 text-center text-[10.5px]">No fue necesario realizar compras.</p>
+        {% endif %}
       </div>
     </section>
   </div>
 
-  <div class="mt-4 grid gap-4 md:grid-cols-2">
+  {# 7, 8 Y 9. FIRMAS DE CONFORMIDAD (3 CASILLAS CONFORME AL DOCUMENTO OFICIAL) #}
+  <div class="mb-2 grid grid-cols-3 gap-2 text-xs">
     {% for titulo, nombre, img in firmas %}
-    <section class="rounded-lg border border-slate-300 text-sm">
-      <div class="bg-sky-100 px-3 py-1.5 font-semibold">{{ titulo }}</div>
-      <div class="flex h-36 flex-col justify-end p-3">
-        {% if img %}<img src="{{ img }}" alt="Firma" class="mx-auto mb-1 max-h-24 object-contain">{% endif %}
-        <div class="border-t border-slate-400 pt-1 text-center text-xs text-slate-600">{{ nombre|default:"Firma y sello" }}</div>
+    <section class="rounded border border-slate-400 flex flex-col justify-between">
+      <div class="bg-sky-100 px-2 py-0.5 font-bold text-sky-900 border-b border-slate-400 text-center text-[10.5px] print-bg-sub">{{ titulo }}</div>
+      <div class="flex h-20 flex-col justify-end p-1.5 text-center">
+        {% if img %}
+          <img src="{{ img }}" alt="Firma" class="mx-auto max-h-12 object-contain">
+        {% else %}
+          <div class="h-10"></div>
+        {% endif %}
+        <div class="border-t border-slate-400 pt-0.5 text-[10px] text-slate-700">
+          <p class="font-semibold">{{ nombre|default:"Firma y sello" }}</p>
+          <p class="text-[9px] text-slate-500">Nombre / Cargo / Fecha</p>
+        </div>
       </div>
     </section>
     {% endfor %}
   </div>
+
+  {# PIE DE PÁGINA MEMBRETE OFICIAL #}
+  <footer class="pt-1 border-t border-slate-400 text-center text-[9.5px] text-slate-600 leading-tight">
+    <p class="font-medium">6a. Avenida 3-00 zona 1, Chiquimula, Departamento de Chiquimula, Guatemala.</p>
+    <p class="text-[9px]">Secretaría Municipal: 7965-8222 / PMT: 7965-8223 / Acceso a la Información Pública: 7965-8218</p>
+  </footer>
 </article>
 {% endblock %}
 
